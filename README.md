@@ -1,2 +1,7 @@
 # CS-673
-## This repository contains code for CS-673 at NJIT. For access please reach out to Dhruvil Kansara
+## Roster: Group 2 (UniTrade – Registration and Trade Data Entry) 
+- Angelo Velardi
+- Dhruvil Kansara
+- Emmanuel Chiobi
+- Josef Birman
+- Saketh Lakshmanan Sathiskumar
