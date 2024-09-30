@@ -10,7 +10,6 @@
 Vision: UniTrade aims to become the world’s leading digital trading platform for commodities, transforming the way buyers and sellers connect, transact, and manage risk in the global marketplace. By utilizing cutting-edge technology, UniTrade will create an efficient ecosystem that empowers traders, businesses, and stakeholders at every level of the supply chain.
 
 Key Pillars of the Vision:
-
 - Global Accessibility: 
 The platform will serve as a global marketplace, breaking down geographical barriers and opening up new markets for buyers and sellers of all sizes
 
@@ -51,7 +50,7 @@ Marketplace Platform Operators:
 Teams that maintain various marketplace platforms will need UniTrade's smooth operations and platform security to make vital business transactions. This will lead to an expanding user base that offers global accessibility and peer-to-peer trading. 
 
 Logistics Providers:
-They will provide UniTrade's global shipping access. Their incentive is to generate revenue from shipping and handling services from marketplace participants. They will also provide a streamlined user experience with cost-effective and fast shipping. 
+They will provide UniTrade's global shipping access. Their incentive is to generate revenue from shipping and handling services from marketplace participants. They will also provide a streamlined user experience with cost-effective and fast shipping.
 
 ## User Persona
 - Name: Mike Hawk
@@ -72,6 +71,34 @@ Challenges
 - Competition from larger providers
 - Technology Integration within the company
 - Keeping shipping costs low
+
+
+## Product Backlog Rationale
+The product backlog is ordered in such a way to prioritize the Registration and Trade Data Entry module's core responsibilities within the UniTrade product. Backlog items that directly deal with features that own user data are the initial focus. Based on other needs beyond that other items slot in behind those core backlog items when they are needed.
+
+Key Concepts Considered for Order Rationale:
+
+1. Prioritize User Needs: The backlog ensures that the most important and valuable features are worked on first. By ordering items by priority, the team can focus on what matters most to stakeholders and the business, aligning the product development with business goals. A backlog captures user stories and features that are driven by the needs of the end-user. This helps ensure the product is being built with the user experience in mind, delivering features that solve real problems and enhances usability. 
+
+2. Transparency and Readability: A well-maintained backlog provides transparency, making it clear what the team is working on, what’s next, and how it contributes to the overall product vision. This fosters collaboration and informed decision-making.
+
+3. Breaking Down Complexity: The backlog should help break down large, complex tasks into manageable pieces, making it easier for the team to incrementally develop the module. The breaking down of complexity also supports more accurate estimation and resource planning.
+
+4. Adaptability to Change: The backlog is organized to support flexiblility and making it easy to reorganize. As priorities shift the backlog can be updated to reflect the current priority without disrupting the entire project plan.
+
+5. Team Collaboration: Backlog items can be discussed, refined, and clarified by the development team and stakeholders during team meetings. This improves understanding of the work, allows for collaboration and helps the team align around shared goals.
+ 
+## Definition of Ready for Backlog Items:
+
+Backlog Item Title - Title of Backlog item
+
+Description - Includes user story information as well as aditional information about backlog item
+
+Acceptance Criteria - Defines criteria for backlog items to be accepted as complete
+
+Estimated Story Points - Included for each backlog item to estimate time needed for each item
+ 
+## Team Relative Size Estimating Activity - Dawn of the First Day
 
 ## Estimated product backlog items (PBIs)
 ### Based on the information we've gathered from the user persona, our estimated PBIs are as follows:
