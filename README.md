@@ -89,10 +89,31 @@ Pivotal tracker isnt working for me. See the linked project for tickets/backlog 
  
 
 ## Your product backlog is ordered. Your rationale for how you ordered your backlog is clearly documented in your git repo's README.
+The product backlog is ordered in such a way to prioritize the Registration and Trade Data Entry module's core responsibilities within the UniTrade product. Backlog items that directly deal with features that own user data are the initial focus. Based on other needs beyond that other items slot in behind those core backlog items when they are needed.
 
+Key Concepts Considered for Order Rationale:
+
+1. Prioritize User Needs: The backlog ensures that the most important and valuable features are worked on first. By ordering items by priority, the team can focus on what matters most to stakeholders and the business, aligning the product development with business goals. A backlog captures user stories and features that are driven by the needs of the end-user. This helps ensure the product is being built with the user experience in mind, delivering features that solve real problems and enhances usability. 
+
+2. Transparency and Readability: A well-maintained backlog provides transparency, making it clear what the team is working on, what’s next, and how it contributes to the overall product vision. This fosters collaboration and informed decision-making.
+
+3. Breaking Down Complexity: The backlog should help break down large, complex tasks into manageable pieces, making it easier for the team to incrementally develop the module. The breaking down of complexity also supports more accurate estimation and resource planning.
+
+4. Adaptability to Change: The backlog is organized to support flexiblility and making it easy to reorganize. As priorities shift the backlog can be updated to reflect the current priority without disrupting the entire project plan.
+
+5. Team Collaboration: Backlog items can be discussed, refined, and clarified by the development team and stakeholders during team meetings. This improves understanding of the work, allows for collaboration and helps the team align around shared goals.
  
 
 ## You have a Definition of Ready for product backlog items. Your Definition of Ready includes at least these items: a) Title, b) User story opening sentence, c) Additional details, d) Estimated in story points. Your Definition of Ready is clearly documented in your git repo's README.
+Definition of Ready for Backlog Items:
+
+Backlog Item Title - Title of Backlog item
+
+Description - Includes user story information as well as aditional information about backlog item
+
+Acceptance Criteria - Defines criteria for backlog items to be accepted as complete
+
+Estimated Story Points - Included for each backlog item to estimate time needed for each item
 
  
 
@@ -105,3 +126,4 @@ Pivotal tracker isnt working for me. See the linked project for tickets/backlog 
  
 
 ## You did a whole team relative size estimating activity. You documented the name of the activity in your README.
+Team Relative Size Estimating Activity - Dawn of the First Day
