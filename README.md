@@ -90,7 +90,21 @@ Pivotal tracker isnt working for me. See the linked project for tickets/backlog 
 
 ## Estimate your PBIs, starting at the top of the backlog and working your way down to the bottom. Your backlog with estimated PBIs is stored in Pivotal Tracker. The URL of your backlog is clearly documented in your git repo's README. Course staff members can view your backlog.
 
- 
+## Estimated product backlog items (PBIs)
+
+### Based on the information we've gathered from the user persona, our estimated PBIs are as follows:
+- Intake Form Simplification
+- Login Flow Optimization
+- Account Status Dashboard / Landing Data
+- Notifications and Alerts System
+- Search Functionality Enhancement
+- Data Entry Shortcuts For Common Inputs
+- Responsive Table Layouts
+- Breadcrumb Navigation
+- Real-Time Data Sync Across Microservices
+- Data Backup and Restore Procedures
+
+Unfortunately, we were unable to add the PBIs to Pivotal Tracker for it is soon to be an obsolete service. As a result, we ultimately added the PBIs on [**GitHub Projects**](https://github.com/users/dhruvilk/projects/1).
 
 ## You estimated your PBIs in story points.
 
