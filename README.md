@@ -31,16 +31,41 @@ Regulatory Compliance and Risk Management: Unitrade will set the standard for co
 
 
 ## Your team has identified articulated a near vision for the first iteration of the product, which you will build in this project. It is clearly documented in your git repo's README.
+Digital marketplace platforms provide a great service for independent and small businesses. But issues such as global access/availability, fraud, and streamlined experience within a platform's interface can be a burden for users. For UniTrade's first iteration, the main goal will strive to launch a functional commodity trading platform with peer-to-peer trading, streamlined UI/UX, and blockchain technology to reduce risk and disputes between UniTrade's buyers and sellers. UniTrade's key features will involve interoperability within financial institutions, automated trades, and setting a highly secure risk management protocol. 
 
+UniTrade's first version will launch within three months and hope to meet at least 1,000 users within three to four months after its first initial release. Ongoing feedback will be collected and utilized to improve the app if any specific issue persists with a good piece of the user base. 
 
 
 ## Your team has identified at least three stakeholder types whose needs are fulfilled by your product. They are clearly documented in your git repo's README.
+End Users (Buyers and Sellers):
+Buyers purchasing ethical goods and services directly from others are one of the biggest stakeholders. Access to unique products, competitive pricing, and the ability to trade across the world is their priority. Sellers offering godos and services are driven by the buyer's interest. They will mainly benefit from peer-to-peer trading that will make UniTrade more seamless than other marketplace platforms.
 
+Marketplace Platform Operators:
+Teams that maintain various marketplace platforms will need UniTrade's smooth operations and platform security to make vital business transactions. This will lead to an expanding user base that offers global accessibility and peer-to-peer trading. 
+
+Logistics Providers:
+They will provide UniTrade's global shipping access. Their incentive is to generate revenue from shipping and handling services from marketplace participants. They will also provide a streamlined user experience with cost-effective and fast shipping. 
  
 
 ## Your team has constructed a detailed user persona for your real stakeholder. The user persona details are clearly documented in your git repo's README.
+Name: Mike Hawk
+Role: Head of Global Operations, Supership Logistics
+Location: Bonita Beach, Florida, USA 
+Company Size: 1,500 employees
 
- 
+Background:
+Mike Hawk is responsible for overseeing global oeprations for Supership, a company that has a specialization in commerce trading and international freight services. With his strong background in logistics, he has led the company's expansion into new markets and developed partnerships with digital marketplaces using UniTrade's framework to increase global outreach. 
+
+Goals:
+- Increase global market 
+- Optimize operational efficiency
+- Enhance customer satisfaction
+
+Challenges
+- Overcoming customs regulations and tax systems within international shipping
+- Competition from larger providers
+- Technology Integration within the company
+- Keeping shipping costs low
 
 ## Your team has constructed an initial product backlog. The backlog is stored in Pivotal Tracker. The URL of your backlog is clearly documented in your git repo's README. Course staff members can view your backlog. 
 Pivotal tracker isnt working for me. See the linked project for tickets/backlog items. 20 created and can be altered to fit a trading platform as opposed to a healthcare management platform
