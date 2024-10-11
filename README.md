@@ -23,3 +23,18 @@
 |-- app.js         # Main entry point
 |-- package.json   # Project dependencies
 ```
+### **Project Usage:**
+```
+#### Step 1: Initialize the Project
+Run these commands in the terminal:
+```bash
+git clone https://github.com/dhruvilk/CS673.git
+cd uniTrade
+npm init -y
+npm install express sequelize pg pg-hstore bcryptjs jsonwebtoken dotenv cors body-parser helmet
+```
+
+#### Step 2: Initialize Sequelize
+```bash
+npx sequelize-cli init
+```
