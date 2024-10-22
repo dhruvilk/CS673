@@ -1,7 +1,7 @@
 # Entities and their attributes owned by your team
 
 # API documentation (contract only) that your team owns
-
+![Local Image](api-sequence-diagram.jpg)
 # Test cases for testing above APIs
 
 # APIs that your stories will need, but will be provided by other teams
