@@ -13,3 +13,4 @@
 - [Issue #37](https://github.com/dhruvilk/CS673/issues/37)
 
 # Make sure that you include the pivotal tracker link where you are showing all your agile artifacts.
+- [Project link](https://github.com/users/dhruvilk/projects/1/views/1?pane=issue&itemId=82301405)
