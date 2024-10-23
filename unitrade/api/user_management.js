@@ -19,73 +19,74 @@ const app = express();
 const bodyParser = require('body-parser');
 const validator = require('validator');
 
-//initializing sql connection attributes
-const connection = mysql.createConnection({
-    host: 'localhost',
-    user: 'root',
-    password: '1234',
-    database: 'database_development'
-});
-
+//initializing sql pool
 const pool = mysql.createPool({
     host: 'localhost',
     user: 'root',
     password: '1234',
     database: 'database_development'
 })
-//connecting to user database
-connection.connect((err) => {
+
+//testing connection to user database
+pool.getConnection((err, connection) => {
     if (err) {
         console.error('Error connecting to MySQL:', err.stack);
         return;
     }
     console.log('Connected to MySQL as id ' + connection.threadId);
-});
+    connection.release();
+})
 
-//middleware
+//middleware to obtain json data and parse body data
 app.use(express.json());
 app.use(bodyParser.urlencoded({
     extended: true
 }));
 
-app.get('/', (req, res) =>{
-    res.send('hello world!!');
-});
-
+/*
+Registration Endpoint
+    - Verifies user credentials are correct and will add a user to the sql table as 
+    long as the input has a unique username and email. 
+    - Username, password, and email must also be at least 8 char long.
+*/
 app.post('/api/register', (req, res) =>{
-    //console.log("Request Body:", req.body); // Log the whole body
-
-    const user = { //place request body into a const for readability
+    //place request body into a const for readability
+    const user = { 
         username: req.body.username,
         password: req.body.password,
         email: req.body.email
     };
 
+    //variables to test user input
     let password_length_ok = false;
     let username_length_ok = false;
     let email_validator_ok = false;
 
+    //username testing
     if (req.body.username.length < 8) { 
-        res.status(400).send('Username is too short');
+        res.status(400).send('Username is too short. Make sure your username is at least 8 characters long.');
     }
     else{
         username_length_ok = true;
     }
 
+    //password testing
     if (req.body.password.length < 8) {
-        res.status(400).send('Password is too short');
+        res.status(400).send('Password is too short. Make sure your password is at least 8 characters long');
     }
     else{
         password_length_ok = true;
     }
 
+    //email testing
     if(validator.isEmail(user.email) == false){
-        res.status(400).send('Email is invalid');
+        res.status(400).send('Email is invalid. Make sure it follows basic email conventions (e.g. johndoe@gmail.com)');
     }
     else{
         email_validator_ok = true;
     }
 
+    //if all credentials pass, then a connection is opened and adds a new user to the sql pool
     if(password_length_ok && username_length_ok && email_validator_ok){
         pool.getConnection((err, connection) => {
             registerNewUser(user.username, user.password, user.email, connection);
@@ -101,6 +102,26 @@ const port = process.env.PORT || 3000;
 app.listen(port, () => console.log(`listening on port ${port}`));
 
 //user management functions
+async function registerNewUser(name, password, email, connection){
+    //Generate random bytes
+    const length = 32;
+    const bytes = crypto.randomBytes(length);
+    const id = bytes.toString('hex').slice(0, length);
+
+    //Create query
+    const query = 'INSERT INTO user (id, name, password, email) VALUES (?, ?, ?, ?)';
+    const values = [id, name, password, email];
+    
+    //execute query and insert values
+    try {
+        connection.execute(query, values);
+        console.log('User inserted with ID: ', id);
+    }
+    catch (err){
+        console.error('Error inserting user: ', err);
+    }
+}
+
 async function getAllUserInfo(){
     return new Promise((resolve, reject) => {
         connection.query('SELECT * FROM Users', (err, results) => {
@@ -114,27 +135,7 @@ async function getAllUserInfo(){
     });
 }
 
-async function registerNewUser(name, password, email, connection){
-    //Generate random bytes
-    const length = 32;
-    const bytes = crypto.randomBytes(length);
-    const id = bytes.toString('hex').slice(0, length);
-
-    //Create query
-    const query = 'INSERT INTO user (id, name, password, email) VALUES (?, ?, ?, ?)';
-    const values = [id, name, password, email];
-    
-    try {
-        connection.execute(query, values);
-        console.log('User inserted with ID: ', id);
-    }
-    catch (err){
-        console.error('Error inserting user: ', err);
-    }
-}
-
 //example of declaring a variable that holds a mysql table values
-
 /*
 (async () => {
     try{
@@ -147,4 +148,3 @@ async function registerNewUser(name, password, email, connection){
     }
 })();
 */
-
