@@ -1,4 +1,4 @@
-### UML:
+### [UML:](/assignments/cs673-uml.pdf)
 - **User**: A user has an `id`, `name`, `email`, and `password`.
 - **BankAccount**: Each user can have multiple bank accounts.
 - **Portfolio**: Users can have assets in a portfolio.
