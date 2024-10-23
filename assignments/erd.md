@@ -1,4 +1,4 @@
-### ERD
+### [ERD ](/assignments/ERD.pdf)
 
 ### Explanation of Relationships:
 1. **User and BankAccount**:
