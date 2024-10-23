@@ -17,66 +17,22 @@ const crypto = require('crypto');
 const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
-
-
-//middleware
-app.use(express.json());
-app.use(bodyParser.urlencoded({
-    extended: true
-}));
-
-const courses = [
-    {id:1, name: 'course1'},
-    {id:2, name: 'course2'},
-    {id:3, name: 'course3'},
-];
-
-app.get('/', (req, res) =>{
-    res.send('hello world!!');
-});
-
-app.get('/api/courses', (req, res) =>{
-    res.send(courses);
-});
-
-app.post('/api/register', (req, res) =>{
-    console.log("Request Body:", req.body); // Log the whole body
-
-    const user = { //place request body into a const for readability
-        username: req.body.username,
-        password: req.body.password,
-        email: req.body.email
-    };
-
-    if (!req.body.username || !req.body.password || !req.body.email) { //return a status if any of the credentials are undefined
-        return res.status(400).send('Missing fields');
-    }
-    else{
-        registerNewUser(user.username, user.password, user.email);
-        res.send(user.username);
-        console.log("log ",user.username);
-    }
-});
-
-app.get('/api/courses/:id', (req, res) => {
-    const course = courses.find(c => c.id === parseInt(req.params.id));
-    if(!course) res.status(404).send('Course with given ID not found');
-    res.send(course);
-});
-
-// PORT
-//to declare ports on windows, command 'export PORT=<insert port number>'
-const port = process.env.PORT || 3000;
-app.listen(port, () => console.log(`listening on port ${port}`));
+const validator = require('validator');
 
 //initializing sql connection attributes
 const connection = mysql.createConnection({
     host: 'localhost',
     user: 'root',
     password: '1234',
-    database: 'userdatabase'
+    database: 'database_development'
 });
 
+const pool = mysql.createPool({
+    host: 'localhost',
+    user: 'root',
+    password: '1234',
+    database: 'database_development'
+})
 //connecting to user database
 connection.connect((err) => {
     if (err) {
@@ -86,6 +42,63 @@ connection.connect((err) => {
     console.log('Connected to MySQL as id ' + connection.threadId);
 });
 
+//middleware
+app.use(express.json());
+app.use(bodyParser.urlencoded({
+    extended: true
+}));
+
+app.get('/', (req, res) =>{
+    res.send('hello world!!');
+});
+
+app.post('/api/register', (req, res) =>{
+    //console.log("Request Body:", req.body); // Log the whole body
+
+    const user = { //place request body into a const for readability
+        username: req.body.username,
+        password: req.body.password,
+        email: req.body.email
+    };
+
+    let password_length_ok = false;
+    let username_length_ok = false;
+    let email_validator_ok = false;
+
+    if (req.body.username.length < 8) { 
+        res.status(400).send('Username is too short');
+    }
+    else{
+        username_length_ok = true;
+    }
+
+    if (req.body.password.length < 8) {
+        res.status(400).send('Password is too short');
+    }
+    else{
+        password_length_ok = true;
+    }
+
+    if(validator.isEmail(user.email) == false){
+        res.status(400).send('Email is invalid');
+    }
+    else{
+        email_validator_ok = true;
+    }
+
+    if(password_length_ok && username_length_ok && email_validator_ok){
+        pool.getConnection((err, connection) => {
+            registerNewUser(user.username, user.password, user.email, connection);
+            connection.release();
+        })
+        res.send(`Hi, ${user.username}! Your account has been successfully created!`);
+    }
+});
+
+// PORT
+//to declare ports on windows, command 'export PORT=<insert port number>'
+const port = process.env.PORT || 3000;
+app.listen(port, () => console.log(`listening on port ${port}`));
 
 //user management functions
 async function getAllUserInfo(){
@@ -101,24 +114,19 @@ async function getAllUserInfo(){
     });
 }
 
-/*
-    Register 
-
-*/
-
-async function registerNewUser(username, password, email){
+async function registerNewUser(name, password, email, connection){
     //Generate random bytes
-    const length = 16;
+    const length = 32;
     const bytes = crypto.randomBytes(length);
-    const userID = bytes.toString('hex').slice(0, length);
+    const id = bytes.toString('hex').slice(0, length);
 
     //Create query
-    const query = 'INSERT INTO Users (userID, username, password, email) VALUES (?, ?, ?, ?)';
-    const values = [userID, username, password, email];
+    const query = 'INSERT INTO user (id, name, password, email) VALUES (?, ?, ?, ?)';
+    const values = [id, name, password, email];
     
     try {
         connection.execute(query, values);
-        console.log('User inserted with ID: ', userID);
+        console.log('User inserted with ID: ', id);
     }
     catch (err){
         console.error('Error inserting user: ', err);
