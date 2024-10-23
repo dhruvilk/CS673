@@ -11,9 +11,63 @@
             (the cart_items table will hold items currently within people's carts with a timer)
 
 */
+const { register } = require('module');
 const mysql = require('mysql2');
 const crypto = require('crypto');
-const { register } = require('module');
+const express = require('express');
+const app = express();
+const bodyParser = require('body-parser');
+
+
+//middleware
+app.use(express.json());
+app.use(bodyParser.urlencoded({
+    extended: true
+}));
+
+const courses = [
+    {id:1, name: 'course1'},
+    {id:2, name: 'course2'},
+    {id:3, name: 'course3'},
+];
+
+app.get('/', (req, res) =>{
+    res.send('hello world!!');
+});
+
+app.get('/api/courses', (req, res) =>{
+    res.send(courses);
+});
+
+app.post('/api/register', (req, res) =>{
+    console.log("Request Body:", req.body); // Log the whole body
+
+    const user = { //place request body into a const for readability
+        username: req.body.username,
+        password: req.body.password,
+        email: req.body.email
+    };
+
+    if (!req.body.username || !req.body.password || !req.body.email) { //return a status if any of the credentials are undefined
+        return res.status(400).send('Missing fields');
+    }
+    else{
+        registerNewUser(user.username, user.password, user.email);
+        res.send(user.username);
+        console.log("log ",user.username);
+    }
+});
+
+app.get('/api/courses/:id', (req, res) => {
+    const course = courses.find(c => c.id === parseInt(req.params.id));
+    if(!course) res.status(404).send('Course with given ID not found');
+    res.send(course);
+});
+
+// PORT
+//to declare ports on windows, command 'export PORT=<insert port number>'
+const port = process.env.PORT || 3000;
+app.listen(port, () => console.log(`listening on port ${port}`));
 
 //initializing sql connection attributes
 const connection = mysql.createConnection({
@@ -72,6 +126,8 @@ async function registerNewUser(username, password, email){
 }
 
 //example of declaring a variable that holds a mysql table values
+
+/*
 (async () => {
     try{
         const a = await registerNewUser('testUser', '1234', 'test1@test.com');
@@ -82,5 +138,5 @@ async function registerNewUser(username, password, email){
         console.error('Error fetching user information: ', err)
     }
 })();
-
+*/
 
