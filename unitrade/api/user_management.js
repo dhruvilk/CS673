@@ -44,11 +44,12 @@ app.use(bodyParser.urlencoded({
 }));
 
 /*
-Registration Endpoint
+    Registration Endpoint
     - Verifies user credentials are correct and will add a user to the sql table as 
     long as the input has a unique username and email. 
     - Username, password, and email must also be at least 8 char long.
 */
+
 app.post('/api/register', (req, res) =>{
     //place request body into a const for readability
     const user = { 
@@ -96,6 +97,44 @@ app.post('/api/register', (req, res) =>{
     }
 });
 
+app.post('/api/login', (req, res) =>{
+
+    //place request body into a const
+    const login_credentials = { 
+        username: req.body.username,
+        password: req.body.password,
+    };
+
+    //create connection with sql table
+    pool.getConnection((err, connection) => {
+
+        //initiate async function to retrieve user info without it being undefined
+        (async () => {
+
+            //try grabbing user information
+            try{
+
+                //this function will grab user information and return a list with the user information
+                const user_login_result = await getUserInfo(login_credentials.username, login_credentials.password, connection);
+
+                //if user was found, send a respond saying login was succesfull
+                if(user_login_result.length > 0){
+                    res.send('Login successful!');
+                }
+                else{
+                    res.send('Your username or password is incorrect.');
+                }
+
+                //release connection
+                connection.release();
+            }
+            catch (err){
+                console.error('Error fetching user information: ', err)
+            }
+        })();
+    });
+});
+
 // PORT
 //to declare ports on windows, command 'export PORT=<insert port number>'
 const port = process.env.PORT || 3000;
@@ -122,9 +161,38 @@ async function registerNewUser(name, password, email, connection){
     }
 }
 
+async function getUserInfo(name, password, connection){
+    return new Promise((resolve, reject) => {
+
+        //create query
+        const query = 'SELECT * FROM user WHERE name = ? AND password = ?';
+        const values = [name, password]
+
+        //try grabbing the user credentials with the query
+        try {
+            connection.execute(query, values, (error, results) =>{
+                console.log(results);
+                if(error){
+                    console.error('Database error: ', error);
+
+                    //return error if something goes wrong
+                    return reject(err);
+                }
+                else{
+
+                    //return user body credentials
+                    resolve(results);
+                }
+            });
+        }
+        catch (err){
+            console.error('Error within function getUserInfo: ', err);
+        }
+    });
+}
 async function getAllUserInfo(){
     return new Promise((resolve, reject) => {
-        connection.query('SELECT * FROM Users', (err, results) => {
+        connection.query('SELECT * FROM user', (err, results) => {
             if (err) {
                 console.error('Query error:', err);
                 return reject(err)
