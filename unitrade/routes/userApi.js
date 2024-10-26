@@ -11,13 +11,14 @@
             (the cart_items table will hold items currently within people's carts with a timer)
 
 */
-const { register } = require('module');
 const mysql = require('mysql2');
-const crypto = require('crypto');
-const express = require('express');
-const app = express();
 const bodyParser = require('body-parser');
 const validator = require('validator');
+const crypto = require('crypto');
+const bcrypt = require('bcrypt');
+const express = require('express');
+
+const app = express();
 
 // PORT
 //to declare ports on windows, command 'export PORT=<insert port number>'
@@ -55,7 +56,7 @@ app.use(bodyParser.urlencoded({
     - Username, password, and email must also be at least 8 char long.
 */
 
-app.post('/api/register', (req, res) =>{
+app.post('/api/register', async (req, res) =>{
     //place request body into a const for readability
     const user = { 
         username: req.body.username,
@@ -67,6 +68,7 @@ app.post('/api/register', (req, res) =>{
     let password_length_ok = false;
     let username_length_ok = false;
     let email_validator_ok = false;
+    let user_is_valid = false;
 
     //username testing
     if (req.body.username.length < 8) { 
@@ -94,11 +96,47 @@ app.post('/api/register', (req, res) =>{
 
     //if all credentials pass, then a connection is opened and adds a new user to the sql pool
     if(password_length_ok && username_length_ok && email_validator_ok){
-        pool.getConnection((err, connection) => {
-            registerNewUser(user.username, user.password, user.email, connection);
-            connection.release();
-        })
-        res.send(`Hi, ${user.username}! Your account has been successfully created!`);
+        user_is_valid = true;
+    }
+
+    if(user_is_valid){
+        pool.getConnection(async (err, connection) => {
+            try{
+                //create query to find existing user
+                const existing_user_name = await getUserByName(user.username, connection);
+                const existing_user_email = await getUserByEmail(user.email, connection);
+
+                //if the email already exists, then the user needs to change their email
+                if(typeof existing_user_email != 'undefined' && user_is_valid){
+                    if(existing_user_email.length > 0 && existing_user_email[0].email.toLowerCase()  === user.email.toLowerCase() ){
+                        console.log('email', existing_user_email);
+                        res.send(`It seems this email is already being user for another account. Please use a different email.`);
+                        user_is_valid = false;
+                    }
+                }
+
+                //if the username already exists, then the needs to change their name
+                if(typeof existing_user_name != 'undefined' && user_is_valid){
+                    if(existing_user_name.length > 0 && existing_user_name[0].name.toLowerCase() === user.username.toLowerCase()){
+                        console.log('name', existing_user_name);
+                        res.send(`It seems this username is already being user for another account. Please use a different username.`);
+                        user_is_valid = false;
+                    }
+                }
+
+                if(user_is_valid){
+                    await registerNewUser(user.username, user.password, user.email, connection);
+                    res.send(`Hi, ${user.username}! Your account has been successfully created!`);
+                }
+            }
+            catch (error){
+                console.error('Error during user registration:', error);
+                return res.status(500).send('Internal Server Error');
+            }
+            finally{
+                connection.release();
+            }
+        });
     }
 });
 
@@ -107,7 +145,7 @@ app.post('/api/register', (req, res) =>{
     - Verifies username and password are correct and returns the sql column with the user's information. 
 */
 
-app.post('/api/login', (req, res) =>{
+app.post('/api/login', async (req, res) =>{
 
     //place request body into a const
     const login_credentials = { 
@@ -116,32 +154,37 @@ app.post('/api/login', (req, res) =>{
     };
 
     //create connection with sql table
-    pool.getConnection((err, connection) => {
+    pool.getConnection(async (err, connection) => {
 
-        //initiate async function to retrieve user info without it being undefined
-        (async () => {
+        //try grabbing user information
+        try{
 
-            //try grabbing user information
-            try{
-
-                //this function will grab user information and return a list with the user information
-                const user_login_result = await getUserInfo(login_credentials.username, login_credentials.password, connection);
-
+            //this function will grab user information and return a list with the user information
+            const user_login_result = await loginUser(login_credentials.username, login_credentials.password, connection);
+            console.log('USER LOGIN ', user_login_result);
+            //validating if the user exists and has the right password
+            if(user_login_result.length > 0){
+                const isValid = await bcrypt.compare(login_credentials.password, user_login_result[0].password);
+                console.log('VALID PASSWORD ',isValid);
                 //if user was found, send a respond saying login was successful
-                if(user_login_result.length > 0){
+                if(user_login_result.length > 0 && isValid){
                     res.send('Login successful!');
                 }
                 else{
                     res.send('Your username or password is incorrect.');
                 }
+            }
+            else{
+                res.send('Your username or password is incorrect!');
+            }
 
-                //release connection
-                connection.release();
-            }
-            catch (err){
-                console.error('Error fetching user information: ', err)
-            }
-        })();
+            //release connection
+            connection.release();
+        }
+        catch (err){
+            console.error('Error fetching user information: ', err);
+            res.status(500).send('Internal Server Error');
+        }
     });
 });
 
@@ -151,18 +194,22 @@ app.post('/api/login', (req, res) =>{
 
 ==============================*/
 async function registerNewUser(name, password, email, connection){
-    //Generate random bytes
-    const length = 32;
-    const bytes = crypto.randomBytes(length);
-    const id = bytes.toString('hex').slice(0, length);
-
-    //Create query
-    const query = 'INSERT INTO user (id, name, password, email) VALUES (?, ?, ?, ?)';
-    const values = [id, name, password, email];
-    
-    //execute query and insert values
     try {
-        connection.execute(query, values);
+        //Generate random bytes
+        const length = 32;
+        const bytes = crypto.randomBytes(length);
+        const id = bytes.toString('hex').slice(0, length);
+        
+        //hash password
+        const salt = bcrypt.genSaltSync(10);
+        const hash = await bcrypt.hash(password, salt);
+
+        //Create query
+        const query = 'INSERT INTO user (id, name, password, email) VALUES (?, ?, ?, ?)';
+        const values = [id, name, hash, email];
+    
+        //execute query and insert values
+        await connection.execute(query, values);
         console.log('User inserted with ID: ', id);
     }
     catch (err){
@@ -170,32 +217,29 @@ async function registerNewUser(name, password, email, connection){
     }
 }
 
-async function getUserInfo(name, password, connection){
+async function loginUser(name, password, connection){
     return new Promise((resolve, reject) => {
 
         //create query
-        const query = 'SELECT * FROM user WHERE name = ? AND password = ?';
-        const values = [name, password]
+        const query = 'SELECT * FROM user WHERE name = ?';
+        const values = [name]
 
         //try grabbing the user credentials with the query
         try {
             connection.execute(query, values, (error, results) =>{
-                console.log(results);
                 if(error){
                     console.error('Database error: ', error);
-
                     //return error if something goes wrong
                     return reject(err);
                 }
                 else{
-
                     //return user body credentials
                     resolve(results);
                 }
             });
         }
         catch (err){
-            console.error('Error within function getUserInfo: ', err);
+            console.error('Error within function loginUser: ', err);
         }
     });
 }
@@ -203,6 +247,36 @@ async function getUserInfo(name, password, connection){
 async function getAllUserInfo(){
     return new Promise((resolve, reject) => {
         connection.query('SELECT * FROM user', (err, results) => {
+            if (err) {
+                console.error('Query error:', err);
+                return reject(err)
+            } else {
+                resolve(results);
+            }
+        });
+    });
+}
+
+async function getUserByName(name, connection){
+    return new Promise((resolve, reject) => {
+        const query = 'SELECT * FROM user WHERE LOWER(name) = LOWER(?)';
+        const values = [name];
+        connection.query(query, values, (err, results) => {
+            if (err) {
+                console.error('Query error:', err);
+                return reject(err)
+            } else {
+                resolve(results);
+            }
+        });
+    });
+}
+
+async function getUserByEmail(email, connection){
+    return new Promise((resolve, reject) => {
+        const query = 'SELECT * FROM user WHERE LOWER(email) = LOWER(?) ';
+        const values = [email];
+        connection.query(query, values, (err, results) => {
             if (err) {
                 console.error('Query error:', err);
                 return reject(err)
