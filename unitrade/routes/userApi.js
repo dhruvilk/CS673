@@ -11,12 +11,17 @@
             (the cart_items table will hold items currently within people's carts with a timer)
 
 */
-const mysql = require('mysql2');
+const mysql = require('mysql2/promise');
 const bodyParser = require('body-parser');
 const validator = require('validator');
 const crypto = require('crypto');
 const bcrypt = require('bcrypt');
 const express = require('express');
+const path = require('path');
+
+const session = require('express-session');
+const flash = require('connect-flash');
+
 
 const app = express();
 
@@ -41,109 +46,111 @@ pool.getConnection((err, connection) => {
     }
     console.log('Connected to MySQL as id ' + connection.threadId);
     connection.release();
-})
+});
 
-//middleware to obtain json data and parse body data
+/*============
+    Middleware
+============*/
+app.use('/public', express.static(path.join(__dirname, 'static')))
+app.set('view engine', 'ejs');
 app.use(express.json());
+
+//creating session
+app.use(session({
+    secret: 'secret-key', 
+    resave: false,
+    saveUninitialized: true,
+}));
+
+//using flash messenger
+app.use(flash());
+
+// Middleware to make flash messages available in templates
+app.use((req, res, next) => {
+    res.locals.messages = req.flash('error');
+    next();
+});
+
 app.use(bodyParser.urlencoded({
     extended: true
 }));
 
-/*
+
+/*============
     Registration Endpoint
     - Verifies user credentials are correct and will add a user to the sql table as 
     long as the input has a unique username and email. 
     - Username, password, and email must also be at least 8 char long.
-*/
+============*/
 
-app.post('/api/register', async (req, res) =>{
-    //place request body into a const for readability
-    const user = { 
-        username: req.body.username,
-        password: req.body.password,
-        email: req.body.email
-    };
+app.get('/', (req, res) => {
+    //BRING USER TO LANDING PAGE
+});
 
-    //variables to test user input
-    let password_length_ok = false;
-    let username_length_ok = false;
-    let email_validator_ok = false;
-    let user_is_valid = false;
+app.get('/api/register', async (req, res) =>{
+    const username = req.session.username || ''; // Retrieve from session
+    const email = req.session.email || ''; // Retrieve from session
+    const messages = req.flash('error'); // Retrieve flash messages
 
-    //username testing
-    if (req.body.username.length < 8) { 
-        res.status(400).send('Username is too short. Make sure your username is at least 8 characters long.');
-    }
-    else{
-        username_length_ok = true;
-    }
+    return res.render('register', {username, email, messages});
+});
 
-    //password testing
-    if (req.body.password.length < 8) {
-        res.status(400).send('Password is too short. Make sure your password is at least 8 characters long');
-    }
-    else{
-        password_length_ok = true;
+app.post('/api/register', async (req, res) => {
+    const { username, password, email, confirmPassword } = req.body;
+    const messages = [];
+
+    // Basic validation
+    if (username.length < 8) messages.push('Username must be at least 8 characters long.');
+    if (password.length < 8) messages.push('Password must be at least 8 characters long.');
+    if (password !== confirmPassword) messages.push('The confirmed password does not match.');
+    if (!validator.isEmail(email)) messages.push('Email is invalid.');
+
+    if (messages.length > 0) {
+        messages.forEach(msg => req.flash('error', msg));
+        return res.render('register', {username, email});
     }
 
-    //email testing
-    if(validator.isEmail(user.email) == false){
-        res.status(400).send('Email is invalid. Make sure it follows basic email conventions (e.g. johndoe@gmail.com)');
-    }
-    else{
-        email_validator_ok = true;
-    }
+    // Check for existing user by username or email
+    try {
+        const connection = await pool.getConnection();
 
-    //if all credentials pass, then a connection is opened and adds a new user to the sql pool
-    if(password_length_ok && username_length_ok && email_validator_ok){
-        user_is_valid = true;
-    }
+        try {
+            const [existingUserByName] = await connection.execute('SELECT * FROM user WHERE LOWER(name) = LOWER(?)', [username]);
+            const [existingUserByEmail] = await connection.execute('SELECT * FROM user WHERE LOWER(email) = LOWER(?)', [email]);
 
-    if(user_is_valid){
-        pool.getConnection(async (err, connection) => {
-            try{
-                //create query to find existing user
-                const existing_user_name = await getUserByName(user.username, connection);
-                const existing_user_email = await getUserByEmail(user.email, connection);
+            if (existingUserByEmail.length > 0) messages.push('This email is already in use.');
+            if (existingUserByName.length > 0) messages.push('This username is already in use.');
 
-                //if the email already exists, then the user needs to change their email
-                if(typeof existing_user_email != 'undefined' && user_is_valid){
-                    if(existing_user_email.length > 0 && existing_user_email[0].email.toLowerCase()  === user.email.toLowerCase() ){
-                        console.log('email', existing_user_email);
-                        res.send(`It seems this email is already being user for another account. Please use a different email.`);
-                        user_is_valid = false;
-                    }
-                }
-
-                //if the username already exists, then the needs to change their name
-                if(typeof existing_user_name != 'undefined' && user_is_valid){
-                    if(existing_user_name.length > 0 && existing_user_name[0].name.toLowerCase() === user.username.toLowerCase()){
-                        console.log('name', existing_user_name);
-                        res.send(`It seems this username is already being user for another account. Please use a different username.`);
-                        user_is_valid = false;
-                    }
-                }
-
-                if(user_is_valid){
-                    await registerNewUser(user.username, user.password, user.email, connection);
-                    res.send(`Hi, ${user.username}! Your account has been successfully created!`);
-                }
+            if (messages.length > 0) {
+                messages.forEach(msg => req.flash('error', msg));
+                return res.render('register', { username, email});
             }
-            catch (error){
-                console.error('Error during user registration:', error);
-                return res.status(500).send('Internal Server Error');
-            }
-            finally{
-                connection.release();
-            }
-        });
+
+            // Hash password and insert new user
+            const salt = await bcrypt.genSalt(10);
+            const hashedPassword = await bcrypt.hash(password, salt);
+            const userId = crypto.randomBytes(16).toString('hex');
+
+            await connection.execute(
+                'INSERT INTO user (id, name, password, email) VALUES (?, ?, ?, ?)',
+                [userId, username, hashedPassword, email]
+            );
+
+            res.send(`Hi, ${username}! Your account has been successfully created!`);
+        } finally {
+            connection.release();
+        }
+    } catch (error) {
+        console.error('Error during registration:', error);
+        res.status(500).send('Internal Server Error');
     }
 });
 
-/*
+
+/*============
     Login Endpoint
     - Verifies username and password are correct and returns the sql column with the user's information. 
-*/
+============*/
 
 app.post('/api/login', async (req, res) =>{
 
@@ -210,7 +217,6 @@ async function registerNewUser(name, password, email, connection){
     
         //execute query and insert values
         await connection.execute(query, values);
-        console.log('User inserted with ID: ', id);
     }
     catch (err){
         console.error('Error inserting user: ', err);
