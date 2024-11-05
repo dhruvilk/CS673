@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - UniTrade</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+
+<body>
+    <div class="container">
+        <header class="settings-header">
+            <h1>Account Settings</h1>
+            <a href="account-dashboard.html" class="back-link">← Back to My Account</a>
+        </header>
+
+        <main class="settings-content">
+            <section class="account-info">
+                <h2>Account Information</h2>
+                <form>
+                    <div class="form-group">
+                        <label for="username">Username:</label>
+                        <input type="text" id="username" name="username" value="[User Name]" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email:</label>
+                        <input type="email" id="email" name="email" value="user@example.com" required>
+                    </div>
+                    <button type="submit" class="save-button">Save Changes</button>
+                </form>
+            </section>
+
+            <section class="password-change">
+                <h2>Change Password</h2>
+                <form>
+                    <div class="form-group">
+                        <label for="current-password">Current Password:</label>
+                        <input type="password" id="current-password" name="current-password" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="new-password">New Password:</label>
+                        <input type="password" id="new-password" name="new-password" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="confirm-password">Confirm New Password:</label>
+                        <input type="password" id="confirm-password" name="confirm-password" required>
+                    </div>
+                    <button type="submit" class="save-button">Change Password</button>
+                </form>
+            </section>
+
+            <section class="preferences">
+                <h2>Preferences</h2>
+                <form>
+                    <div class="form-group">
+                        <label for="language">Preferred Language:</label>
+                        <select id="language" name="language">
+                            <option value="en">English</option>
+                            <option value="es">Spanish</option>
+                            <option value="fr">French</option>
+                            <!-- Add more languages as needed -->
+                        </select>
+                    </div>
+                    <button type="submit" class="save-button">Save Preferences</button>
+                </form>
+            </section>
+        </main>
+    </div>
+
+    <script src="scripts.js"></script>
+</body>
+
+</html>
