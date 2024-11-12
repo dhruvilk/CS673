@@ -111,38 +111,38 @@ app.post('/api/register', async (req, res) => {
     }
 
     // Check for existing user by username or email
+    const connection = await pool.getConnection();
+
     try {
-        const connection = await pool.getConnection();
+        const [existingUserByName] = await connection.execute('SELECT * FROM user WHERE LOWER(name) = LOWER(?)', [username]);
+        const [existingUserByEmail] = await connection.execute('SELECT * FROM user WHERE LOWER(email) = LOWER(?)', [email]);
 
-        try {
-            const [existingUserByName] = await connection.execute('SELECT * FROM user WHERE LOWER(name) = LOWER(?)', [username]);
-            const [existingUserByEmail] = await connection.execute('SELECT * FROM user WHERE LOWER(email) = LOWER(?)', [email]);
+        if (existingUserByEmail.length > 0) messages.push('This email is already in use.');
+        if (existingUserByName.length > 0) messages.push('This username is already in use.');
 
-            if (existingUserByEmail.length > 0) messages.push('This email is already in use.');
-            if (existingUserByName.length > 0) messages.push('This username is already in use.');
-
-            if (messages.length > 0) {
-                messages.forEach(msg => req.flash('error', msg));
-                return res.render('register', { username, email});
-            }
-
-            // Hash password and insert new user
-            const salt = await bcrypt.genSalt(10);
-            const hashedPassword = await bcrypt.hash(password, salt);
-            const userId = crypto.randomBytes(16).toString('hex');
-
-            await connection.execute(
-                'INSERT INTO user (id, name, password, email) VALUES (?, ?, ?, ?)',
-                [userId, username, hashedPassword, email]
-            );
-
-            res.send(`Hi, ${username}! Your account has been successfully created!`);
-        } finally {
-            connection.release();
+        if (messages.length > 0) {
+            messages.forEach(msg => req.flash('error', msg));
+            return res.render('register', { username, email});
         }
-    } catch (error) {
+
+        // Hash password and insert new user
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+        const userId = crypto.randomBytes(16).toString('hex');
+
+        await connection.execute(
+            'INSERT INTO user (id, name, password, email) VALUES (?, ?, ?, ?)',
+            [userId, username, hashedPassword, email]
+        );
+
+        res.send(`Hi, ${username}! Your account has been successfully created!`);
+    } 
+    catch (error) {
         console.error('Error during registration:', error);
         res.status(500).send('Internal Server Error');
+    }
+    finally {
+        connection.release();
     }
 });
 
@@ -152,47 +152,53 @@ app.post('/api/register', async (req, res) => {
     - Verifies username and password are correct and returns the sql column with the user's information. 
 ============*/
 
-app.post('/api/login', async (req, res) =>{
+app.get('/api/login', async (req, res) =>{
+    const username = req.session.username || ''; // Retrieve from session
+    const messages = req.flash('error'); // Retrieve flash messages
 
-    //place request body into a const
-    const login_credentials = { 
-        username: req.body.username,
-        password: req.body.password,
-    };
+    return res.render('login', {username, messages});
+});
 
-    //create connection with sql table
-    pool.getConnection(async (err, connection) => {
+app.post('/api/login', async (req, res) => {
+    
+    const messages = [];
+    const {username, password} = req.body;
 
-        //try grabbing user information
-        try{
+    try {
+        // Create a connection to the database
+        const connection = await pool.getConnection();
+        // Attempt to retrieve user data based on the provided username
+        console.log("grabbing user login result by name");
+        const user_login_result = await getUserByName(username, connection);
 
-            //this function will grab user information and return a list with the user information
-            const user_login_result = await loginUser(login_credentials.username, login_credentials.password, connection);
-            console.log('USER LOGIN ', user_login_result);
-            //validating if the user exists and has the right password
-            if(user_login_result.length > 0){
-                const isValid = await bcrypt.compare(login_credentials.password, user_login_result[0].password);
-                console.log('VALID PASSWORD ',isValid);
-                //if user was found, send a respond saying login was successful
-                if(user_login_result.length > 0 && isValid){
-                    res.send('Login successful!');
-                }
-                else{
-                    res.send('Your username or password is incorrect.');
-                }
+        
+        console.log(user_login_result.length);
+        if (user_login_result.length > 0) {
+            // Validate the password using bcrypt
+            const isValid = await bcrypt.compare(password, user_login_result[0].password);
+            console.log('VALID PASSWORD ', isValid);
+            if (isValid) {
+                messages.push('Login successful!');
+            } 
+            else {
+                messages.push('Your username or password is incorrect.');
             }
-            else{
-                res.send('Your username or password is incorrect!');
-            }
+        } 
+        else {
+            messages.push('Your username or password is incorrect.');
+        }
 
-            //release connection
-            connection.release();
+        if (messages.length > 0) {
+            messages.forEach(msg => req.flash('error', msg));
+            return res.render('login', {username});
         }
-        catch (err){
-            console.error('Error fetching user information: ', err);
-            res.status(500).send('Internal Server Error');
-        }
-    });
+
+        // Release the connection
+        connection.release();
+    } catch (err) {
+        console.error('Error during login process: ', err);
+        res.status(500).send('Internal Server Error');
+    }
 });
 
 /*==============================
@@ -200,55 +206,6 @@ app.post('/api/login', async (req, res) =>{
     user management functions
 
 ==============================*/
-async function registerNewUser(name, password, email, connection){
-    try {
-        //Generate random bytes
-        const length = 32;
-        const bytes = crypto.randomBytes(length);
-        const id = bytes.toString('hex').slice(0, length);
-        
-        //hash password
-        const salt = bcrypt.genSaltSync(10);
-        const hash = await bcrypt.hash(password, salt);
-
-        //Create query
-        const query = 'INSERT INTO user (id, name, password, email) VALUES (?, ?, ?, ?)';
-        const values = [id, name, hash, email];
-    
-        //execute query and insert values
-        await connection.execute(query, values);
-    }
-    catch (err){
-        console.error('Error inserting user: ', err);
-    }
-}
-
-async function loginUser(name, password, connection){
-    return new Promise((resolve, reject) => {
-
-        //create query
-        const query = 'SELECT * FROM user WHERE name = ?';
-        const values = [name]
-
-        //try grabbing the user credentials with the query
-        try {
-            connection.execute(query, values, (error, results) =>{
-                if(error){
-                    console.error('Database error: ', error);
-                    //return error if something goes wrong
-                    return reject(err);
-                }
-                else{
-                    //return user body credentials
-                    resolve(results);
-                }
-            });
-        }
-        catch (err){
-            console.error('Error within function loginUser: ', err);
-        }
-    });
-}
 
 async function getAllUserInfo(){
     return new Promise((resolve, reject) => {
@@ -263,20 +220,29 @@ async function getAllUserInfo(){
     });
 }
 
-async function getUserByName(name, connection){
-    return new Promise((resolve, reject) => {
+async function getUserByName(name, connection) {
+   // Create the database connection
+    try {
+        // Define the query
         const query = 'SELECT * FROM user WHERE LOWER(name) = LOWER(?)';
-        const values = [name];
-        connection.query(query, values, (err, results) => {
-            if (err) {
-                console.error('Query error:', err);
-                return reject(err)
-            } else {
-                resolve(results);
-            }
-        });
-    });
+        
+        // Execute the query
+        const [rows] = await connection.execute(query, [name]);
+        
+        // Check if any user is found
+        if (rows.length > 0) {
+            //console.log('User found:', rows[0]);
+            return rows;
+        } else {
+            console.log('No user found with that name.');
+            return null;
+        }
+    } catch (error) {
+        console.error('Error finding user:', error);
+        throw error; // rethrow error after logging it
+    } 
 }
+
 
 async function getUserByEmail(email, connection){
     return new Promise((resolve, reject) => {
