@@ -1,7 +1,7 @@
 const express = require('express');
 const passport = require('passport');
 const { renderLogin, renderRegister, handleRegister, handleLogout } = require('../controllers/authController');
-const ensureAuthenticated = require('../middlewares/ensureAuth');
+const ensureAuthenticated = require('../middleware/ensureAuth');
 
 const router = express.Router();
 
@@ -14,7 +14,7 @@ router.post('/api/login', (req, res, next) => {
         if (!user) {
             // Login failed; flash an error message and render the login page with the username
             req.flash('error', info.message || 'Invalid username or password.');
-            return res.render('login', { 
+            return res.render('login', {
                 username: req.body.username || '', // Preserve entered username
                 messages: req.flash()            // Retrieve flash messages
             });
@@ -23,7 +23,7 @@ router.post('/api/login', (req, res, next) => {
             if (err) {
                 return next(err); // Handle error during login
             }
-            return res.redirect('/dashboard'); // Redirect to dashboard on success
+            return res.redirect('/api/dashboard'); // Redirect to dashboard on success
         });
     })(req, res, next);
 });
@@ -34,7 +34,7 @@ router.post('/api/register', handleRegister);
 
 router.get('/api/logout', handleLogout);
 
-router.get('/dashboard', ensureAuthenticated, (req, res) => {
+router.get('/api/dashboard', ensureAuthenticated, (req, res) => {
     res.render('dashboard', { user: req.user });
 });
 

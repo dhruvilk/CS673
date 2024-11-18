@@ -1,11 +1,16 @@
 const bcrypt = require('bcrypt');
+const passport = require('passport');
 const { createUser, getUserByName } = require('../models/userModel');
 
-const renderLogin = (req, res) => { //MAKE SURE IT REDIRECTS TO DASHBOARD IF YOU ARE ALREADY LOGGED IN
+const renderLogin = (req, res) => {
     const username = req.body.username || ''; // Default to an empty string if not provided
     const messages = req.flash();            // Retrieve flash messages
-
-    res.render('login', { username, messages });
+    if(req.isAuthenticated()){
+        res.redirect('dashboard');
+    }
+    else{
+        res.render('login', { username, messages });
+    }
 };
 
 const renderRegister = (req, res) => {
