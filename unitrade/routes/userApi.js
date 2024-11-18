@@ -18,10 +18,12 @@ const crypto = require('crypto');
 const bcrypt = require('bcrypt');
 const express = require('express');
 const path = require('path');
-
 const session = require('express-session');
 const flash = require('connect-flash');
+const passport = require('passport')
 
+const initializePassport = require('../config/passport-config');
+initializePassport(passport);
 
 const app = express();
 
@@ -37,6 +39,8 @@ const pool = mysql.createPool({
     password: '1234',
     database: 'database_development'
 })
+
+module.exports = pool;
 
 //testing connection to user database
 pool.getConnection((err, connection) => {
@@ -57,7 +61,7 @@ app.use(express.json());
 
 //creating session
 app.use(session({
-    secret: 'secret-key', 
+    secret: 'secret-key',
     resave: false,
     saveUninitialized: true,
 }));
@@ -75,11 +79,10 @@ app.use(bodyParser.urlencoded({
     extended: true
 }));
 
-
 /*============
     Registration Endpoint
-    - Verifies user credentials are correct and will add a user to the sql table as 
-    long as the input has a unique username and email. 
+    - Verifies user credentials are correct and will add a user to the sql table as
+    long as the input has a unique username and email.
     - Username, password, and email must also be at least 8 char long.
 ============*/
 
@@ -134,9 +137,9 @@ app.post('/api/register', async (req, res) => {
             'INSERT INTO user (id, name, password, email) VALUES (?, ?, ?, ?)',
             [userId, username, hashedPassword, email]
         );
-
-        res.send(`Hi, ${username}! Your account has been successfully created!`);
-    } 
+        
+        return res.redirect('/api/login');
+    }
     catch (error) {
         console.error('Error during registration:', error);
         res.status(500).send('Internal Server Error');
@@ -149,7 +152,7 @@ app.post('/api/register', async (req, res) => {
 
 /*============
     Login Endpoint
-    - Verifies username and password are correct and returns the sql column with the user's information. 
+    - Verifies username and password are correct and returns the sql column with the user's information.
 ============*/
 
 app.get('/api/login', async (req, res) =>{
