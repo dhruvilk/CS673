@@ -1,6 +1,7 @@
 const express = require('express');
 const passport = require('passport');
-const { renderLogin, renderRegister, handleRegister, handleLogout } = require('../controllers/authController');
+const { renderLogin, renderRegister, handleRegister, handleLogout,
+        renderOrders, renderMarketplace, renderWallet, renderTransactions, renderDashboard} = require('../controllers/authController');
 const ensureAuthenticated = require('../middleware/ensureAuth');
 
 const router = express.Router();
@@ -23,7 +24,7 @@ router.post('/api/login', (req, res, next) => {
             if (err) {
                 return next(err); // Handle error during login
             }
-            return res.redirect('/api/dashboard'); // Redirect to dashboard on success
+            return res.redirect('/api/my_account'); // Redirect to dashboard on success
         });
     })(req, res, next);
 });
@@ -32,10 +33,18 @@ router.post('/api/login', (req, res, next) => {
 router.get('/api/register', renderRegister);
 router.post('/api/register', handleRegister);
 
+router.get('/api/orders', renderOrders);
+
+router.get('/api/my_account', ensureAuthenticated, async (req, res) =>{
+    renderDashboard(req, res);
+});
+
 router.get('/api/logout', handleLogout);
 
-router.get('/api/dashboard', ensureAuthenticated, (req, res) => {
-    res.render('dashboard', { user: req.user });
-});
+router.get('/api/marketplace', renderMarketplace);
+
+router.get('/api/wallet', renderWallet);
+
+router.get('/api/past_transactions', renderTransactions);
 
 module.exports = router;

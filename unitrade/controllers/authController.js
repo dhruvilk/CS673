@@ -1,6 +1,7 @@
 const bcrypt = require('bcrypt');
 const passport = require('passport');
 const { createUser, getUserByName } = require('../models/userModel');
+const validator = require('validator');
 
 const renderLogin = (req, res) => {
     const username = req.body.username || ''; // Default to an empty string if not provided
@@ -67,4 +68,25 @@ const handleLogout = (req, res) => {
     });
 };
 
-module.exports = { renderLogin, renderRegister, handleRegister, handleLogout };
+const renderOrders = (req, res) => {
+
+}
+
+const renderMarketplace = (req, res) => {
+    
+}
+
+const renderWallet = (req, res) => {
+
+}
+
+const renderTransactions = (req, res) => {
+
+}
+
+const renderDashboard = (req, res) =>{
+    console.log(req.user);
+    res.render('dashboard', { user: req.user });
+}
+
+module.exports = { renderLogin, renderRegister, handleRegister, handleLogout, renderOrders, renderMarketplace, renderWallet, renderTransactions, renderDashboard};

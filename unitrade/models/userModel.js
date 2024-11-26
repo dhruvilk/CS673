@@ -1,4 +1,6 @@
-const pool = require('../config/db');
+const pool = require('../config/db.js');
+const bcrypt = require('bcrypt');
+const crypto = require('crypto');
 
 const getUserByName = async (username) => {
     const connection = await pool.getConnection();
@@ -23,7 +25,8 @@ const getUserById = async (id) => {
 const createUser = async (username, email, hashedPassword) => {
     const connection = await pool.getConnection();
     try {
-        await connection.execute('INSERT INTO user (name, email, password) VALUES (?, ?, ?)', [username, email, hashedPassword]);
+        const id = crypto.randomBytes(16).toString('hex');
+        await connection.execute('INSERT INTO user (id, name, password, email) VALUES (?, ?, ?, ?)', [id, username, hashedPassword, email]);
     } finally {
         connection.release();
     }
