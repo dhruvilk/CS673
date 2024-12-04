@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Account - UniTrade</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+
+<body>
+    <div class="container">
+        <aside class="navigation-section">
+            <h3>Account Navigation</h3>
+            <div class="nav-grid">
+                <% navigationLinks.forEach(link=> { %>
+                    <div class="nav-link">
+                        <%= link %>
+                    </div>
+                    <% }); %>
+                        <a href="<%= faqLink %>" class="nav-link2">FAQ</a>
+            </div>
+            <button class="back-button">&larr;</button>
+        </aside>
+
+        <main class="account-section">
+            <div class="profile-head">
+                <div class="profile-info">
+                    <img src="<%= profilePicture %>" alt="Profile Picture" class="profile-picture">
+                    <div class="welcome-message">
+                        <h2>Hello, <%= userName %>!</h2>
+                        <p>Email: <%= userEmail %>
+                        </p>
+                    </div>
+                </div>
+                <div class="header-actions">
+                    <a href="<%= helpLink %>" class="help-link">Help & Support</a>
+                    <p> | </p>
+                    <a href="<%= customizeLink %>" class="help-link">Customize</a>
+                    <p> | </p>
+                    <form method="POST" action="/logout">
+                        <button class="logout-button">Logout</button>
+                    </form>
+                </div>
+            </div>
+            <div class="account-content">
+                <h1>Account Overview</h1>
+                <p>This is where you can manage your account settings and view your activity.</p>
+            </div>
+            <div class="settings-container">
+                <a href="/activity" class="activity-link">
+                    <img src="/img/activity-icon2.png" alt="Activity" class="activity-icon">
+                </a>
+            </div>
+        </main>
+    </div>
+
+    <script src="/scripts.js"></script>
+</body>
+
+</html>
