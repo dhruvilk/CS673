@@ -1,6 +1,17 @@
-const pool = require('../config/db.js');
+const mysql = require('mysql2/promise');
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
+
+const pool = mysql.createPool({
+    host: process.env.DB_HOST || 'localhost',
+    user: process.env.DB_USER || 'root',
+    password: process.env.DB_PASSWORD || '1234',
+    database: process.env.DB_NAME || 'database_development',
+    waitForConnections: true,   // Maintain a pool of connections
+    connectionLimit: 10000,        // Maximum number of connections in the pool
+    queueLimit: 0               // Unlimited queued requests
+});
+
 
 const getUserByName = async (username) => {
     const connection = await pool.getConnection();
@@ -32,4 +43,4 @@ const createUser = async (username, email, hashedPassword) => {
     }
 };
 
-module.exports = { getUserByName, getUserById, createUser };
+module.exports = { getUserByName, getUserById, createUser};

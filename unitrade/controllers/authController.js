@@ -7,7 +7,7 @@ const renderLogin = (req, res) => {
     const username = req.body.username || ''; // Default to an empty string if not provided
     const messages = req.flash();            // Retrieve flash messages
     if(req.isAuthenticated()){
-        res.redirect('dashboard');
+        res.redirect('my_account');
     }
     else{
         res.render('login', { username, messages });
@@ -18,8 +18,12 @@ const renderRegister = (req, res) => {
     const username = req.body.username || ''; // Retain form data on validation error
     const email = req.body.email || '';       // Retain form data on validation error
     const messages = req.flash();            // Retrieve all flash messages
-
-    res.render('register', { username, email, messages });
+    if(req.isAuthenticated()){
+        res.redirect('my_account');
+    }
+    else{
+        res.render('register', { username, email, messages });
+    }
 };
 
 const handleRegister = async (req, res) => {
@@ -64,6 +68,7 @@ const handleLogout = (req, res) => {
             console.error('Error during logout:', err);
             return res.status(500).send('Internal Server Error');
         }
+        res.clearCookie('connect.sid');
         res.redirect('/api/login');
     });
 };

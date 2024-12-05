@@ -6,7 +6,7 @@ const path = require('path');
 const dotenv = require('dotenv');
 const authRoutes = require('./routes/authRoutes');
 const initializePassport = require('./config/passport-config');
-const pool = require('./config/db');
+const {sessionStore} = require('./config/db');
 
 dotenv.config();
 
@@ -22,15 +22,27 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Session Configuration
 app.use(session({
     secret: process.env.SESSION_SECRET || 'default-secret',
+    store: sessionStore, // Use the Sequelize session store
     resave: false,
-    saveUninitialized: true,
+    saveUninitialized: false,
+    cookie: {
+        maxAge: 24 * 60 * 60 * 1000, // 24 hours
+        secure: false, //process.env.NODE_ENV === 'production', // Set to true in production (requires HTTPS)
+        httpOnly: true, // Protects against XSS attacks
+    },
 }));
-app.use(flash());
 
 // Passport Initialization
 initializePassport(passport);
 app.use(passport.initialize());
 app.use(passport.session());
+
+app.use(flash());
+app.use((req, res, next) => {
+    res.locals.success_message = req.flash('success');
+    res.locals.error_message = req.flash('error');
+    next();
+});
 
 // Flash Middleware for Views
 app.use((req, res, next) => {
