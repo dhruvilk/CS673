@@ -73,7 +73,6 @@ CREATE TABLE Settlement (
     PRIMARY KEY (id),
     FOREIGN KEY (trade_id) REFERENCES Trade(id),
     FOREIGN KEY (bank_account_id) REFERENCES BankAccount(id)
-);
 
 CREATE TABLE Sessions (
     sid VARCHAR(36) NOT NULL PRIMARY KEY,
